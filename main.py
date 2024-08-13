@@ -1,9 +1,11 @@
 import requests
 import hashlib
 import random
+import time
 from bs4 import BeautifulSoup
 import os
 import json
+from datetime import datetime
 
 # 生成签名
 def generate_sign(word, app_key, app_secret, salt):
@@ -110,6 +112,7 @@ def main():
             existing_content = f.read()
 
         new_content = ""
+        count = 0
         for word in words:
             result = create_request(word, app_key, app_secret)
             if result:
@@ -118,9 +121,18 @@ def main():
                 # 删除空行
                 detailed_content = "\n".join([line for line in detailed_content.split("\n") if line.strip() != "-"])
                 new_content += f"## {word.capitalize()}\n{detailed_content}\n"
+            
+            count += 1
+            if count % 5 == 0:
+                print("等待5秒...")
+                time.sleep(5)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(new_content + existing_content)
+        # 添加单词个数和日期
+        date_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        summary = f"\n\n**本次查询单词个数:** {len(words)}\n**查询日期:** {date_str}\n"
+
+        with open(output_file, 'a', encoding='utf-8') as f:  # 使用 'a' 模式追加内容到文件末尾
+            f.write(new_content + summary)
 
 if __name__ == '__main__':
     main()
